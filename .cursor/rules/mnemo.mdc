@@ -1,0 +1,27 @@
+---
+description: Mnemo 项目约定
+alwaysApply: true
+---
+# Mnemo —— Chatbot 记忆系统教学项目
+
+## 技术栈
+Next.js 16 (App Router) / TypeScript strict / Vercel AI SDK 7 / @ai-sdk/google / PostgreSQL + pgvector / Drizzle ORM / Tailwind v4 + shadcn/ui / pnpm。库的 API 与旧版差异大，写代码前先查官方文档或 node_modules 类型，不要凭记忆。聊天和 embedding 都用 Gemini，不使用 Anthropic 或 OpenAI。
+
+## 架构原则
+1. 记忆分四层，各自独立模块：工作记忆(context-builder)、短期记忆(messages+summaries)、长期记忆(memories)、语义记忆(documents RAG)。
+2. 渐进式复杂度：按 Phase 递增，不要提前引入后面 Phase 的东西。
+3. 教学优先：宁可多写直白的代码，关键逻辑加中文注释，写清楚"为什么这样做"。
+4. 异步不阻塞：摘要、记忆提取等重活用 next/server 的 after()，不能阻塞流式响应。
+5. Token 意识：所有注入上下文的内容都要过 token 预算。
+
+## 编码规范
+- 文件 kebab-case，组件 PascalCase；业务逻辑在 lib/，数据库在 lib/db/，AI 逻辑在 lib/ai/。
+- 不用 any；数据库和 LLM 调用必须 try-catch，给用户友好提示。
+- 环境变量全部列在 .env.example 并注释用途。
+- 代码/变量名用英文，注释和 UI 文案用中文，commit 用英文 Conventional Commits。
+- AI SDK 7：输出上限是 maxOutputTokens，流式纯文本用 toTextStreamResponse()。不要写 maxTokens、toDataStreamResponse。
+- Next.js 16 动态路由 params 是 Promise，先 await 再取 id。
+- 向量维度只读 EMBEDDING_DIMENSIONS。Gemini embedding 非 3072 维时必须做 L2 归一化。
+
+## 不做什么
+不做用户认证(硬编码 DEFAULT_USER_ID)、不做生产级 UI、不引入 LangChain、不接第三方记忆服务、不做多用户并发。
